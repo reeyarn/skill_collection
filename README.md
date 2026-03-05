@@ -79,8 +79,45 @@ su - claudebox
 All subsequent steps run **as `claudebox`**, not your main user.
 
 ---
+### Step 3A: Install nvm in the local user folder
 
-### Step 3: Install Claude Code
+The problem is that claudebox is using your main user's Homebrew (/opt/homebrew), which it doesn't have write access to — which is actually good, that's the sandbox working correctly!
+The fix is to install Node/npm privately for claudebox using nvm, so it installs entirely within /Users/claudebox:
+
+
+```bash
+# 1. Install nvm for claudebox (no sudo needed, installs to ~/.nvm)
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+
+# 2. Load nvm in current shell
+export NVM_DIR="$HOME/.nvm"
+source "$NVM_DIR/nvm.sh"
+
+# 3. Install Node (LTS) — installs to ~/.nvm, not /opt/homebrew
+nvm install --lts
+
+# 4. Verify npm is now the claudebox-owned one
+which npm
+# Should show: /Users/claudebox/.nvm/versions/node/vXX.X.X/bin/npm
+
+# 5. Now install Claude Code
+npm i -g @anthropic-ai/claude-code
+
+# 6. Verify
+claude --version
+```
+
+
+Then add this to ~/.zshrc so nvm loads on every login:
+
+```
+echo 'export NVM_DIR="$HOME/.nvm"' >> ~/.zshrc
+echo '[ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"' >> ~/.zshrc
+```
+
+This keeps everything under /Users/claudebox — completely isolated from your main user's Homebrew.
+
+### Step 3B: Install Claude Code
 
 ```bash
 # Install via official installer (no Node.js required)
